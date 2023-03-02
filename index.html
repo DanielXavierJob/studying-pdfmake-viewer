@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <title>Beautiful JSON Viewer And Editor to PDFMake</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/pdfmake@latest/build/pdfmake.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pdfmake@latest/build/vfs_fonts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html-to-pdfmake/browser.js"></script>
+    <script
+      src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+      integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      type="text/javascript"
+      src="./dist/jquery.json-editor.min.js"
+    ></script>
+  </head>
+  <body>
+    <style type="text/css">
+      body {
+        padding: 0;
+        margin: 5px 10px 10px;
+        overflow-y: hidden;
+      }
+      #json-display {
+        border: 1px solid #000;
+        margin: 0;
+        padding: 10px 20px;
+        width: 50vw;
+        max-height: 98vh;
+        height: 95.8vh;
+        overflow-y: auto;
+      }
+      #view-frame {
+        width: 50vw;
+        height: 98vh;
+      }
+    </style>
+    <div style="display: flex">
+      <pre id="json-display"></pre>
+      <div id="pdf-display"></div>
+    </div>
+
+    <script type="text/javascript">
+      var timeout = null;
+      var firstTime = true;
+      function getJson() {
+        try {
+          var data = {
+            content: [
+              [
+                "First paragraph",
+                "Another paragraph, this time a little bit longer to make sure, this line will be divided into at least two lines",
+              ],
+            ],
+          };
+          generatePDF(data, "#pdf-display");
+          return data;
+        } catch (ex) {
+          alert("Wrong JSON Format: " + ex);
+        }
+      }
+
+      function generatePDF(data, view) {
+        const pdfDocGenerator = pdfMake.createPdf(data);
+        pdfDocGenerator.getDataUrl((dataUrl) => {
+          const targetElement = document.querySelector(view);
+          const iframe = document.createElement("iframe");
+          iframe.src = dataUrl;
+          iframe.id = "view-frame";
+          targetElement.innerHTML = "";
+          targetElement.appendChild(iframe);
+        });
+      }
+
+      var editor = new JsonEditor("#json-display", getJson());
+      generatePDF(getJson(), "#pdf-display");
+      $("#json-display").on("keyup", () => {
+        if (timeout) clearTimeout(timeout);
+        firstTime = false;
+
+        timeout = setTimeout(() => {
+          const data = editor.get();
+          editor.load(data);
+          generatePDF(data, "#pdf-display");
+        }, 2000);
+      });
+    </script>
+  </body>
+</html>
